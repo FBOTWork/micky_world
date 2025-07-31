@@ -1,0 +1,6 @@
+<launch>
+    <rosparam file="$(find work_world)/config/plugin.yaml" ns="work_world" command="load" />
+    <rosparam file="$(find work_world)/config/POSE_ROBOCUP.yaml" ns="work_world" command="load" />
+    <node pkg="work_world" type="pose.py" name="pose" output="screen"> 
+    </node>
+</launch>

@@ -3,7 +3,7 @@ import rospy
 import tf
 
 from .world_plugin import WorldPlugin
-from work_world_msgs.srv import GetKey, GetKeyResponse, GetPose, GetPoseResponse
+from micky_world_msgs.srv import GetKey, GetKeyResponse, GetPose, GetPoseResponse
 
 from geometry_msgs.msg import Pose, PoseStamped, Vector3
 
@@ -38,7 +38,7 @@ class PosePlugin(WorldPlugin):
     return size
 
   def setStaticPose(self):
-    poses = rospy.get_param('/work_world/pose/targets')
+    poses = rospy.get_param('/micky_world/pose/targets')
     with self.r.pipeline() as pipe:
       for p_id, pose in poses.items():
         print(pose)
@@ -87,6 +87,6 @@ class PosePlugin(WorldPlugin):
 
   def run(self):
     self.setStaticPose()
-    self.closest_key_server = rospy.Service('/work_world/get_closest_key', GetKey, self.getClosestKey)
-    self.pose_server = rospy.Service('/work_world/get_pose', GetPose, self.getPose)
+    self.closest_key_server = rospy.Service('/micky_world/get_closest_key', GetKey, self.getClosestKey)
+    self.pose_server = rospy.Service('/micky_world/get_pose', GetPose, self.getPose)
     rospy.spin()

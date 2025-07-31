@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from work_world.plugins import HeartbeatReaderPlugin
+from micky_world.plugins import HeartbeatReaderPlugin
 
 if __name__ == '__main__':
   rospy.init_node('boiler_plate_reader')

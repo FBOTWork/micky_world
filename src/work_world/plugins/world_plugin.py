@@ -6,9 +6,9 @@ import redis
 class WorldPlugin:
 
   def __init__(self):
-    redis_params = rospy.get_param('/work_world/redis')
+    redis_params = rospy.get_param('/micky_world/redis')
     self.r = redis.Redis(**redis_params)
-    self.fixed_frame = rospy.get_param('/work_world/fixed_frame')
+    self.fixed_frame = rospy.get_param('/micky_world/fixed_frame')
 
   @abstractmethod
   def run(self):

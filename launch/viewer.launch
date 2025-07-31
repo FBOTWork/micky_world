@@ -1,5 +1,5 @@
 <launch>
-    <rosparam file="$(find work_world)/config/plugin.yaml" ns="work_world" command="load" />
-    <node pkg="work_world" type="viewer_reader.py" name="viewer_reader" output="screen"> 
+    <rosparam file="$(find micky_world)/config/plugin.yaml" ns="micky_world" command="load" />
+    <node pkg="micky_world" type="viewer_reader.py" name="viewer_reader" output="screen"> 
     </node>
 </launch>

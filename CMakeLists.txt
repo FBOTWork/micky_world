@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(work_world)
+project(micky_world)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -10,7 +10,7 @@ project(work_world)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
-  work_world_msgs
+  micky_world_msgs
   tf
   tf2_ros
   tf2_geometry_msgs

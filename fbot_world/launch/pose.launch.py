@@ -11,12 +11,12 @@ def generate_launch_description():
 
     plugin_file_arg = DeclareLaunchArgument(
         'plugin_config',
-        default_value=PathJoinSubstitution([FindPackageShare('fbot_world'), 'config', 'plugin.yaml']),
+        default_value=PathJoinSubstitution([FindPackageShare('micky_world'), 'config', 'plugin.yaml']),
         description='Path to the World Plugin parameter file'
     )
 
     pose_node = Node(
-        package='fbot_world',
+        package='micky_world',
         executable='pose',
         name='pose',
         parameters=[LaunchConfiguration('plugin_config'),

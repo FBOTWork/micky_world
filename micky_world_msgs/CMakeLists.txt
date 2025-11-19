@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(fbot_world_msgs)
+project(micky_world_msgs)
 
 
 find_package(ament_cmake REQUIRED)

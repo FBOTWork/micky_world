@@ -56,7 +56,7 @@ class PoseWriter (Node):
         self.poses = {'targets': {}}
 
         ws_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../.."))
-        self.config_path = os.path.join(ws_dir, "src", "fbot_world", "fbot_world", "config")
+        self.config_path = os.path.join(ws_dir, "src", "micky_world", "micky_world", "config")
 
         while True:
             self.yaml_file = input("Enter the name of the file to save the poses (e.g., 'pose_inspection.yaml'): ")

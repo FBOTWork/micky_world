@@ -22,8 +22,15 @@ def generate_launch_description():
         parameters=[LaunchConfiguration('plugin_config'),
                     {'config_file_name': LaunchConfiguration('config_file_name')}],
     )
+
+    poses_file_arg = DeclareLaunchArgument(
+        'poses_config',
+        default_value=PathJoinSubstitution([FindPackageShare('micky_world'), 'config', 'your_file.yaml']),
+        description='Path to the poses configuration file'
+    )
     
     return LaunchDescription([
         plugin_file_arg,
+        poses_file_arg,
         pose_node
     ])

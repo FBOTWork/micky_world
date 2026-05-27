@@ -1,0 +1,18 @@
+target:
+  ponto_final:
+    px: 3.0
+    py: 0.0
+    pz: 0.0
+    ox: 0.0
+    oy: 0.0
+    oz: -0.363
+    ow: 0.932
+
+  ponto_inicial:
+    px: -0.017
+    py: 0.129
+    pz: 0.0
+    ox: 0.0
+    oy: 0.0
+    oz: -0.0365
+    ow: 0.9993

@@ -5,8 +5,8 @@ import yaml
 import os
 
 from world_scripts.world_plugin import WorldPlugin
-from fbot_world_msgs.msg import FBOTPoses
-from fbot_world_msgs.srv import GetPose, GetPoseFromSet, GetSets
+from micky_world_msgs.msg import FBOTPoses
+from micky_world_msgs.srv import GetPose, GetPoseFromSet, GetSets
 from geometry_msgs.msg import Pose, Vector3
 from ament_index_python.packages import get_package_share_directory
 
@@ -37,15 +37,15 @@ class PosePlugin(WorldPlugin):
     super().__init__(nodeName=node_name)
     self.declareParameters()
     self.readParameters()
-    ws_dir = os.path.abspath(os.path.join(get_package_share_directory('fbot_world'), '../../../..'))
-    self.file_path = os.path.join(ws_dir, "src", "fbot_world","fbot_world", "config", self.config_file_name + '.yaml')
+    ws_dir = os.path.abspath(os.path.join(get_package_share_directory('micky_world'), '../../../..'))
+    self.file_path = os.path.join(ws_dir, "src", "micky_world","micky_world", "config", self.config_file_name + '.yaml')
     self.targets = readYamlFile(self.file_path)
     self.get_logger().info(f"File name: {self.config_file_name}")
 
     self.setStaticPose()
-    self.pose_server = self.create_service(GetPose, '/fbot_world/get_pose', self.getPose)
-    self.set_server = self.create_service(GetPoseFromSet, '/fbot_world/get_set', self.getPoseFromSet)
-    self.sets_names = self.create_service(GetSets, '/fbot_world/get_groups_names', self.getGroupNames)
+    self.pose_server = self.create_service(GetPose, '/micky_world/get_pose', self.getPose)
+    self.set_server = self.create_service(GetPoseFromSet, '/micky_world/get_set', self.getPoseFromSet)
+    self.sets_names = self.create_service(GetSets, '/micky_world/get_groups_names', self.getGroupNames)
     self.get_logger().info(f"Pose node started!!!")
 
   def readPose(self, group_set: str, key: str):

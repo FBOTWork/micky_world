@@ -4,6 +4,8 @@ import rclpy
 import yaml
 import os
 
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
+from ament_index_python.packages import get_package_share_directory
 from rclpy.exceptions import ROSInterruptException
 from rclpy.wait_for_message import wait_for_message
 from geometry_msgs.msg import PoseWithCovarianceStamped
@@ -13,7 +15,8 @@ from rclpy.node import Node
 '''
 Save the current pose in the specified topic to a yaml file.
 Created by Gabriel Dorneles on 2024-10-06.
-Port to ROS2 by Vitor Anello on 2025-05-7.
+Port to ROS2 by Vitor Anello on 2025-05-07.
+Improved by Erick Manetti on 2026-10-07 
 '''
 
 
@@ -54,9 +57,10 @@ class PoseWriter (Node):
         super().__init__(node_name='pose_writer')
     
         self.poses = {'targets': {}}
+        self.current_pose = None
 
-        ws_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../../.."))
-        self.config_path = os.path.join(ws_dir, "src", "micky_world", "micky_world", "config")
+        pkg_micky_world = get_package_share_directory('micky_world')
+        self.config_path = os.path.join(pkg_micky_world, "config")
 
         while True:
             self.yaml_file = input("Enter the name of the file to save the poses (e.g., 'pose_inspection.yaml'): ")
@@ -68,16 +72,28 @@ class PoseWriter (Node):
         self.declare_parameter('~pose_topic', '/amcl_pose')
         self.pose_topic = self.get_parameter('~pose_topic').get_parameter_value().string_value
 
+        qos_profile = QoSProfile(
+            depth=1,
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL
+        )
+
+        self.subscription = self.create_subscription(
+            PoseWithCovarianceStamped,
+            self.pose_topic,
+            self.pose_callback,
+            qos_profile
+        )
+
+    def pose_callback(self, msg):
+        self.current_pose = msg.pose.pose
+
     def save_pose(self) -> None:
         '''
         @brief Save the current pose in the specified topic to a yaml file.
         '''
 
         while rclpy.ok():
-            success, message = wait_for_message(msg_type=PoseWithCovarianceStamped, node=self, topic="/amcl_pose", time_to_wait=2.0)
-            current_pose = message.pose.pose if success else None
-
-
             self.get_logger().info("Ready to save a new pose.")
             pose_name = input("Move the robot to the desired pose and enter its name (e.g., 'garbage_1', 'exit'): ")
 
@@ -85,19 +101,21 @@ class PoseWriter (Node):
                 self.get_logger().warning("No name provided, skipping pose.")
                 continue
 
-                if current_pose is None:
-                    self.get_logger().warning("No pose received from topic yet.")
-                    continue
+            current_pose = self.current_pose
+            self.get_logger().info(f"Received pose: {current_pose}")
+            if current_pose is None:
+                self.get_logger().warning("No pose received from topic yet. Make sure AMCL is running and publishing to /amcl_pose.")
+                continue
 
             self.poses['targets'][pose_name] = OrderedDict([
-            ('px', current_pose.position.x),
-            ('py', current_pose.position.y),
-            ('pz', current_pose.position.z),
-            ('ox', current_pose.orientation.x),
-            ('oy', current_pose.orientation.y),
-            ('oz', current_pose.orientation.z),
-            ('ow', current_pose.orientation.w)
-        ])
+                ('px', current_pose.position.x),
+                ('py', current_pose.position.y),
+                ('pz', current_pose.position.z),
+                ('ox', current_pose.orientation.x),
+                ('oy', current_pose.orientation.y),
+                ('oz', current_pose.orientation.z),
+                ('ow', current_pose.orientation.w)
+            ])
 
             self.get_logger().info(f"Pose '{pose_name}' saved.")
 
@@ -106,7 +124,7 @@ class PoseWriter (Node):
                 if save_now == 'n':
                     self.write_to_yaml()
                     self.get_logger().info(f"Poses saved to {self.yaml_file}. Shutting down node.")
-                    break
+                    return
 
                 elif save_now == 'y':
                     break
@@ -129,7 +147,7 @@ class PoseWriter (Node):
                     self.get_logger().error(f"Error reading {self.yaml_file}: {e}")
                     existing_data = OrderedDict()
         else:
-            self.get_logger().info(f"{self.yaml_file} does not exist. Creating a new file.")
+            self.get_logger().info(f"{self.yaml_file} does not exist. Creating a new file at {self.yaml_path}.")
             existing_data = OrderedDict()
 
         if 'targets' not in existing_data:
@@ -146,10 +164,20 @@ def main(args=None) -> None:
     try:
         rclpy.init(args=args)
         saver = PoseWriter()
-        saver.save_pose()
-        rclpy.spin_once(saver)
+
+        import threading
+        spin_thread = threading.Thread(target=rclpy.spin, args=(saver,))
+        spin_thread.start()
+        
+        try:
+            saver.save_pose()
+        except KeyboardInterrupt:
+            pass
+
         saver.destroy_node()
         rclpy.try_shutdown()
+        spin_thread.join()
+
     except ROSInterruptException:
         pass
 

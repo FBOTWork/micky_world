@@ -2,7 +2,7 @@
 
 import rclpy
 import yaml
-import os
+from pathlib import Path
 
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy
 from ament_index_python.packages import get_package_share_directory
@@ -59,8 +59,10 @@ class PoseWriter (Node):
         self.poses = {'targets': {}}
         self.current_pose = None
 
-        pkg_micky_world = get_package_share_directory('micky_world')
-        self.config_path = os.path.join(pkg_micky_world, "config")
+        package_share = Path(get_package_share_directory('micky_world'))
+        package_name = package_share.name
+        workspace_dir = package_share.parents[3]
+        self.config_path = workspace_dir / "src" / package_name / package_name / "config"
 
         while True:
             self.yaml_file = input("Enter the name of the file to save the poses (e.g., 'pose_inspection.yaml'): ")
@@ -68,7 +70,7 @@ class PoseWriter (Node):
                 break
             else:
                 self.get_logger().warning("Invalid input. The file name must end with '.yaml'. Please try again.")
-        self.yaml_path = self.config_path + '/' + self.yaml_file
+        self.yaml_path = self.config_path / self.yaml_file
         self.declare_parameter('~pose_topic', '/amcl_pose')
         self.pose_topic = self.get_parameter('~pose_topic').get_parameter_value().string_value
 
@@ -137,7 +139,7 @@ class PoseWriter (Node):
         '''
         OrderedDumper.add_representer(OrderedDict, OrderedDumper.represent_ordereddict)
 
-        if os.path.exists(self.yaml_path):
+        if self.yaml_path.exists():
             self.get_logger().info(f"{self.yaml_file} already exists. The new poses will be appended to the existing data.")
 
             with open(self.yaml_path, 'r') as yaml_file:

@@ -56,16 +56,14 @@ class PoseMarkers(Node):
   def readParameters(self):
     """
     @brief: Reads parameters for the PoseMarkers node.
-    The config_file_name can be a name inside the package config folder or a full path,
-    with or without the .yaml extension.
+    The config_file_name is resolved the same way as in the pose node: a name inside the
+    source config folder or a full path, without the .yaml extension.
     """
     name = self.get_parameter('config_file_name').get_parameter_value().string_value
-    if not name.endswith('.yaml'):
-      name += '.yaml'
-    if os.path.isabs(name):
-      self.file_path = name
-    else:
-      self.file_path = os.path.join(get_package_share_directory('micky_world'), 'config', name)
+    if name.endswith('.yaml'):
+      name = name[:-len('.yaml')]
+    ws_dir = os.path.abspath(os.path.join(get_package_share_directory('micky_world'), '../../../..'))
+    self.file_path = os.path.join(ws_dir, "src", "micky_world", "micky_world", "config", name + '.yaml')
     self.frame_id = self.get_parameter('frame_id').get_parameter_value().string_value
     self.rate = self.get_parameter('rate').get_parameter_value().double_value
 

@@ -45,16 +45,26 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
+    # Shows in RViz the same poses file the pose node serves; it does not use Redis,
+    # so it starts right away.
+    pose_markers_node = Node(
+        package='micky_world',
+        executable='pose_markers',
+        name='pose_markers',
+        parameters=[{'config_file_name': LaunchConfiguration('config_file_name')}],
+    )
+
     # The pose node writes the poses to Redis as soon as it starts, so the server must already be
     # accepting connections. Reuse one that is running (e.g. a system service on the robot);
     # otherwise start one with this launch, without persistence (poses come from the yaml).
     if _redis_is_up(host, port):
-        return [LogInfo(msg=f'Using the Redis server already running at {host}:{port}'), pose_node]
+        return [LogInfo(msg=f'Using the Redis server already running at {host}:{port}'), pose_node, pose_markers_node]
 
     if host not in ('localhost', '127.0.0.1'):
         return [
             LogInfo(msg=f'Redis at {host}:{port} is not reachable and is not local; not starting one'),
             pose_node,
+            pose_markers_node,
         ]
 
     redis_server = ExecuteProcess(
@@ -71,6 +81,7 @@ def launch_setup(context, *args, **kwargs):
     return [
         LogInfo(msg=f'Starting a Redis server at {host}:{port}'),
         redis_server,
+        pose_markers_node,
         RegisterEventHandler(OnProcessIO(target_action=redis_server, on_stdout=start_pose_node_when_ready)),
     ]
 

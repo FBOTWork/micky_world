@@ -28,6 +28,7 @@ setup(
         'console_scripts': [
             'pose = micky_world.pose:main',
             'pose_writer = micky_world.pose_writer:main',
+            'pose_markers = micky_world.pose_markers:main',
             ],
     },
 )

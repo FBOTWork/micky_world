@@ -56,7 +56,7 @@ class PoseWriter (Node):
 
         super().__init__(node_name='pose_writer')
     
-        self.poses = {'targets': {}}
+        self.poses = {'pose': {'targets': OrderedDict()}}
         self.current_pose = None
 
         package_share = Path(get_package_share_directory('micky_world'))
@@ -65,12 +65,16 @@ class PoseWriter (Node):
         self.config_path = workspace_dir / "src" / package_name / package_name / "config"
 
         while True:
-            self.yaml_file = input("Enter the name of the file to save the poses (e.g., 'pose_inspection.yaml'): ")
-            if self.yaml_file.endswith('.yaml'):
-                break
-            else:
-                self.get_logger().warning("Invalid input. The file name must end with '.yaml'. Please try again.")
+            self.yaml_file = input("Enter the name of the file to save the poses (e.g., 'pose_inspection.yaml'): ").strip()
+            if not self.yaml_file:
+                self.get_logger().warning("No file name provided. Please try again.")
+                continue
+            if not self.yaml_file.endswith('.yaml'):
+                self.yaml_file += '.yaml'
+            break
         self.yaml_path = self.config_path / self.yaml_file
+        if self.yaml_path.exists():
+            self.get_logger().info(f"File '{self.yaml_file}' already exists. New poses will be appended to it.")
         self.declare_parameter('~pose_topic', '/amcl_pose')
         self.pose_topic = self.get_parameter('~pose_topic').get_parameter_value().string_value
 
@@ -109,7 +113,7 @@ class PoseWriter (Node):
                 self.get_logger().warning("No pose received from topic yet. Make sure AMCL is running and publishing to /amcl_pose.")
                 continue
 
-            self.poses['targets'][pose_name] = OrderedDict([
+            self.poses['pose']['targets'][pose_name] = OrderedDict([
                 ('px', current_pose.position.x),
                 ('py', current_pose.position.y),
                 ('pz', current_pose.position.z),
@@ -122,13 +126,13 @@ class PoseWriter (Node):
             self.get_logger().info(f"Pose '{pose_name}' saved.")
 
             while True:
-                save_now = input("Do you want to add more poses? (y/n): ").lower()
+                save_now = input("Do you want to add more poses? (Y/n): ").strip().lower()
                 if save_now == 'n':
                     self.write_to_yaml()
                     self.get_logger().info(f"Poses saved to {self.yaml_file}. Shutting down node.")
                     return
 
-                elif save_now == 'y':
+                elif save_now in ('', 'y'):
                     break
                 else:
                     self.get_logger().warning("Invalid input. Please enter 'y' or 'n'.")
@@ -152,13 +156,25 @@ class PoseWriter (Node):
             self.get_logger().info(f"{self.yaml_file} does not exist. Creating a new file at {self.yaml_path}.")
             existing_data = OrderedDict()
 
-        if 'targets' not in existing_data:
-            existing_data['targets']= OrderedDict()
+        if not isinstance(existing_data, dict):
+            existing_data = OrderedDict()
 
-        existing_data['targets'].update(self.poses['targets'])
+        if 'pose' not in existing_data or not isinstance(existing_data['pose'], dict):
+            existing_data['pose'] = OrderedDict()
+
+        if 'targets' not in existing_data['pose'] or not isinstance(existing_data['pose']['targets'], dict):
+            if 'targets' in existing_data and isinstance(existing_data['targets'], dict):
+                existing_data['pose']['targets'] = existing_data.pop('targets')
+            else:
+                existing_data['pose']['targets'] = OrderedDict()
+        elif 'targets' in existing_data:
+            existing_data['pose']['targets'].update(existing_data.pop('targets'))
+
+        existing_data['pose']['targets'].update(self.poses['pose']['targets'])
+        self.config_path.mkdir(parents=True, exist_ok=True)
         with open(self.yaml_path, 'w') as yaml_file:
-             yaml.dump(existing_data, yaml_file, default_flow_style=False, Dumper=OrderedDumper)
-             
+            yaml.dump(existing_data, yaml_file, default_flow_style=False, Dumper=OrderedDumper)
+
         return
 
 

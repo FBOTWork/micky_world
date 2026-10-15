@@ -18,6 +18,9 @@ def readYamlFile(file_path: str = None):
   """
   with open(file_path, 'r') as file:
     yaml_data = yaml.safe_load(file)
+  # pose_writer saves the groups under 'pose:' (pose_salvador.yaml); the older files have them at the top
+  if isinstance(yaml_data, dict) and isinstance(yaml_data.get('pose'), dict):
+    yaml_data = yaml_data['pose']
   return yaml_data
 
 class PosePlugin(WorldPlugin):
